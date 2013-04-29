@@ -1,6 +1,8 @@
-#include <stdio.h>
+#include <iostream>
 #include "windows.h"
 #include "winsvc.h"
+
+using namespace std;
 
 
 /*
@@ -103,6 +105,7 @@ bool loaddriver(SC_HANDLE svchandle)
 	}
 
 	cout << "driver successfully loaded"<<endl;
+	return true;
 }
 
 /*
@@ -143,4 +146,93 @@ bool deletedriver(SC_HANDLE svchandle)
 
 int main(int argc, char *argv[])
 {
+	//check to make sure we have to proper number of arguments
+	if(argc < 2 || argc > 3)
+	{
+		cout << "error, incorrect # of arguments" << endl;
+		return -1;
+	}
+
+	char *path = argv[1];	//save the contents of the RK directory
+	char *driver_name = NULL;	//this will be the contents of the KMD name
+
+	//Store the name of our KMD
+	if(argc == 2)
+	{
+		driver_name = "chris_kmd";	//give a name to the driver
+	}
+
+	else
+	{
+		driver_name = argv[2];
+	}
+
+	
+	SC_HANDLE svchandle = NULL;	//Handle to a service 
+	int choice = 0;	//will hold the choice of the user
+
+	while(1)
+	{
+		//print out the choices for the user to complete
+		cout << "What would you like to do" <<endl;
+		cout << "1 -- install driver." << endl;	//choice 1 install
+		cout << "2 -- run driver." << endl;	//choice 2 run
+		cout << "3 -- stop driver." << endl;	//choice 3 stop
+		cout << "4 -- kill driver." << endl;	//choice 4 delete
+		cout << "5 -- quit the program." << endl;	//choice 5 quit
+
+		
+		cin >> choice;	//input the choice
+		cout << endl;
+
+
+		//case statement of the choice made by the user
+		switch(choice)
+		{
+		case 1:
+			{
+				cout << "Installing the driver " << driver_name << "." << endl;
+				svchandle = installdriver(driver_name, path);
+			}
+		case 2:
+			{
+				cout << "Running the driver " << driver_name << "." << endl;
+				if(loaddriver(svchandle) == false)
+				{
+					cout << "Load Error, deleating driver....please reinstall driver and try again." << endl;
+					if(deletedriver(svchandle) == false)
+					{
+						cout << "Could not delete driver, please try again." << endl;
+					}
+				}
+			}
+		case 3:
+			{
+				cout << "Stopping the driver " << driver_name << "." << endl;
+				if(stopdriver(svchandle) == false)
+				{
+					cout << "Could not stop the driver, please try again." << endl;
+				}
+			}
+		case 4:
+			{
+				cout << "Deleting the driver " << driver_name << "." << endl;
+				if(deletedriver(svchandle) == false)
+				{
+					cout << "Could not delete driver, please try again." << endl;
+				}
+			}
+		case 5:
+			{
+				cout << "Quiting the program....Goodbye." << endl;
+				break;	//if we want to quit the program then break out of the infinite loop
+			}
+		//An attempt to prevent the user from breaking the program
+		default:
+			{
+				cout << "Error, Invalid choice." << endl;
+			}
+		}
+	}
+	return 0;
 }
